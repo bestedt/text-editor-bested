@@ -1,14 +1,14 @@
-const { offlineFallback, warmStrategyCache } = require('workbox-recipes');
-
-// added the stale while revalidate strategy for the page cache and the assets cache
+// import necessary modules and strategies
 const { CacheFirst, StaleWhileRevalidate } = require('workbox-strategies');
 const { registerRoute } = require('workbox-routing');
 const { CacheableResponsePlugin } = require('workbox-cacheable-response');
 const { ExpirationPlugin } = require('workbox-expiration');
 const { precacheAndRoute } = require('workbox-precaching/precacheAndRoute');
 
+// precache assets
 precacheAndRoute(self.__WB_MANIFEST);
 
+// cache HTML pages with CacheFirst strategy
 const pageCache = new CacheFirst({
   cacheName: 'page-cache',
   plugins: [
@@ -21,33 +21,55 @@ const pageCache = new CacheFirst({
   ],
 });
 
-warmStrategyCache({
-  urls: ['/index.html', '/'],
-  strategy: pageCache,
-});
 
 registerRoute(({ request }) => request.mode === 'navigate', pageCache);
-
 // TODO: Implement asset caching
+// cache assets with StaleWhileRevalidate 
 registerRoute(
-  // adding the condition to check that the request is for an image, style or script
-  ({ request }) => request.destination === 'script' || request.destination === 'style' || request.destination === 'image',
-  // using the stale while revalidate strategy, which will return the cached response if there is one, otherwise it will fetch the asset from the network
+  ({ request }) =>
+    request.destination === 'script' ||
+    request.destination === 'style' ||
+    (request.destination === 'image' && request.url.includes('/images/')),
   new StaleWhileRevalidate({
     cacheName: 'assets-cache',
-    // using the cacheable response plugin to cache the successful responses
     plugins: [
       new CacheableResponsePlugin({
         statuses: [0, 200],
       }),
       new ExpirationPlugin({
-        // setting the cache expiration to 30 days
-        maxAgeSeconds: 30 * 24 * 60 * 60, 
+        maxAgeSeconds: 30 * 24 * 60 * 60,
       }),
     ],
   })
 );
 
-// calling the offline fallback method to cache the offline page
-offlineFallback();
+// handle fetch events
+self.addEventListener('fetch', (event) => {
+  console.log('Fetching:', event.request.url);
+
+  event.respondWith(
+    fetch(event.request).catch((error) => {
+      console.error('Fetch error:', error);
+
+      // offline response here
+      const offlineResponse = new Response('<h1>Offline</h1>', {
+        headers: { 'Content-Type': 'text/html' },
+      });
+
+      return offlineResponse;
+    })
+  );
+});
+
+// log additional information for debugging
+console.log('Service Worker loaded:', self);
+
+// event listener for fetch errors in the service worker
+self.addEventListener('message', (event) => {
+  if (event.data.error) {
+    // error message for service worker fetch errors
+    console.error('Fetch error:', event.data.error);
+    document.body.innerHTML = '<h1>Offline</h1>';
+  }
+});
 
