@@ -40,7 +40,8 @@ SO THAT I can reliably retrieve them for later use
 
 ![Screenshot 2024-01-02 123948](https://github.com/bestedt/text-editor-bested/assets/139821441/ab22519a-e98c-4df3-9e19-67c3c5c579d0)
 
-![Screenshot 2024-01-02 135004](https://github.com/bestedt/text-editor-bested/assets/139821441/e4d63f3a-0a2c-43a2-b6d7-8cb097efc7f0)
+
+![Screenshot 2024-01-02 124021](https://github.com/bestedt/text-editor-bested/assets/139821441/3a93b030-6202-4f2d-89d1-9c46159143af)
 
 ## Source Code Link
 
